@@ -690,7 +690,7 @@ function wday(v){
   if(!v)return''; const[y,m,d]=v.split('-');
   return WEEKDAYS[new Date(+y,+m-1,+d).getDay()];
 }
-function getPlano(sit,retorno){ return sit==='INDISPONÍVEL'?fmtDate(retorno):'IMEDIATO'; }
+function getPlano(sit,retorno){ return sit==='INDISPONÍVEL'?fmtDate(retorno):''; }
 function esc(s){ return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;') }
 function toast(msg,type='info'){
   const w=document.getElementById('toast-wrap');
@@ -1111,7 +1111,7 @@ function renderDateBlocks(){
             </div>
             <div class="det-row">
               <select id="det-${di}-${ti}" onchange="setDet(${di},${ti},this.value)">${detOpts}</select>
-              <span class="plano-tag ${plano==='IMEDIATO'?'pt-green':'pt-orange'}">${plano}</span>
+              ${plano?`<span class="plano-tag pt-orange">${plano}</span>`:''}
               <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
                 <label style="font-size:13px;font-weight:700;color:${isTrab||isOcioso?'var(--primary)':'var(--muted)'};white-space:nowrap">Estado Atuação${isTrab||isOcioso?' *':''}</label>
                 <select style="max-width:160px;font-size:14px;padding:10px 14px;border-color:${(isTrab||isOcioso)&&!ts.regiao?'var(--rose-border)':'var(--border2)'}"
@@ -1339,11 +1339,13 @@ function generateXLSX(){
         {wch:22},{wch:40},{wch:34},
         {wch:22},{wch:14},{wch:12},{wch:24}
       ];
-      // Substitui coluna DATA por número serial com formato dd/mm/yyyy
+      // Substitui coluna DATA (R) e PLANO DE RETORNO (O) por número serial com formato de data
       for(let i=1;i<=rows.length;i++){
-        const cellRef='R'+String(i+1);
-        const serial=dateToSerial(rows[i-1].date);
-        if(serial){ ws[cellRef]={t:'n', v:serial, z:'m/d/yy'}; }
+        const row=rows[i-1];
+        const serialData=dateToSerial(row.date);
+        if(serialData){ ws['R'+String(i+1)]={t:'n', v:serialData, z:'m/d/yy'}; }
+        const serialPlano=row.situacao==='INDISPONÍVEL'?dateToSerial(row.retorno):null;
+        if(serialPlano){ ws['O'+String(i+1)]={t:'n', v:serialPlano, z:'m/d/yy'}; }
       }
       XLSX.utils.book_append_sheet(wb,ws,'RELATÓRIO DIÁRIO DAS EQUIPES');
 
