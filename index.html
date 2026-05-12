@@ -690,7 +690,7 @@ function wday(v){
   if(!v)return''; const[y,m,d]=v.split('-');
   return WEEKDAYS[new Date(+y,+m-1,+d).getDay()];
 }
-function getPlano(sit){ return sit==='INDISPONÍVEL'?'PRECISA INFORMAR A DATA DE RETORNO':'IMEDIATO' }
+function getPlano(sit,retorno){ return sit==='INDISPONÍVEL'?fmtDate(retorno):'IMEDIATO'; }
 function esc(s){ return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;') }
 function toast(msg,type='info'){
   const w=document.getElementById('toast-wrap');
@@ -1082,7 +1082,7 @@ function renderDateBlocks(){
       const isOcioso=ts.situacao==='OCIOSO';
       const lider=team.members.find(m=>m.ocupacao==='Líder');
       const detOpts=(DET[ts.situacao]||[]).map(d=>`<option value="${d}"${d===ts.detalhes?' selected':''}>${d}</option>`).join('');
-      const plano=getPlano(ts.situacao);
+      const plano=getPlano(ts.situacao,ts.retorno);
       const projOptsClean=['<option value=""'+((!ts.projeto||ts.projeto==='')?' selected':'')+'>— Selecione o Projeto —</option>',
         ...PROJECTS.map(p=>`<option value="${p}"${p===ts.projeto?' selected':''}>${p}</option>`)].join('');
       const regiaoOpts=UF_OPTS.map(u=>`<option value="${u}"${u===ts.regiao?' selected':''}>${u||'— Estado de Atuação —'}</option>`).join('');
@@ -1124,6 +1124,7 @@ function renderDateBlocks(){
             <div class="retorno-row">
               <label>Data de retorno *</label>
               <input type="date" class="retorno-input" value="${ts.retorno||''}"
+                min="${new Date().toISOString().split('T')[0]}"
                 onchange="setField(${di},${ti},'retorno',this.value)">
             </div>`:''}
 
@@ -1198,7 +1199,7 @@ function buildRows(){
           ocupacao:m.ocupacao, cpf:m.cpf||'', celular:m.celular||'',
           estadoOrigem:m.estado||'', regiao:ts.regiao||'',
           contratacao:m.contratacao||'PJ', conhecimentos:m.conhecimentos||'',
-          situacao:ts.situacao, detalhes:ts.detalhes, plano:getPlano(ts.situacao),
+          situacao:ts.situacao, detalhes:ts.detalhes, plano:getPlano(ts.situacao,ts.retorno),
           retorno:ts.retorno||'',
           projeto:ts.situacao==='TRABALHANDO'?(ts.projeto||''):'',
           sigla:ts.situacao==='TRABALHANDO'?(ts.sigla||''):'',
