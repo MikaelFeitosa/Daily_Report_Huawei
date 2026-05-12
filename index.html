@@ -744,6 +744,9 @@ function goStep(n){
           if(!ts.projeto){ errMsg=`Selecione o Projeto para Equipe ${t.nome} em ${labelDate(de.date)}.`; return }
           if(!ts.sigla.trim()){ errMsg=`Informe a Sigla do Site para Equipe ${t.nome} em ${labelDate(de.date)}.`; return }
         }
+        if(ts.situacao==='OCIOSO'){
+          if(!ts.regiao){ errMsg=`Informe o Estado de Atuação da Equipe ${t.nome} em ${labelDate(de.date)}.`; return }
+        }
         if(ts.situacao==='INDISPONÍVEL'&&!ts.retorno){ errMsg=`Informe a data de retorno para Equipe ${t.nome} em ${labelDate(de.date)}.`; return }
       });
     });
@@ -1076,6 +1079,7 @@ function renderDateBlocks(){
     const teamRows=teams.map((team,ti)=>{
       const ts=de.teamStatus[ti]||defaultStatus();
       const isTrab=ts.situacao==='TRABALHANDO';
+      const isOcioso=ts.situacao==='OCIOSO';
       const lider=team.members.find(m=>m.ocupacao==='Líder');
       const detOpts=(DET[ts.situacao]||[]).map(d=>`<option value="${d}"${d===ts.detalhes?' selected':''}>${d}</option>`).join('');
       const plano=getPlano(ts.situacao);
@@ -1109,9 +1113,9 @@ function renderDateBlocks(){
               <select id="det-${di}-${ti}" onchange="setDet(${di},${ti},this.value)">${detOpts}</select>
               <span class="plano-tag ${plano==='IMEDIATO'?'pt-green':'pt-orange'}">${plano}</span>
               <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                <label style="font-size:13px;font-weight:700;color:${isTrab?'var(--primary)':'var(--muted)'};white-space:nowrap">Estado Atuação${isTrab?' *':''}</label>
-                <select style="max-width:160px;font-size:14px;padding:10px 14px;border-color:${isTrab&&!ts.regiao?'var(--rose-border)':'var(--border2)'}"
-                  ${isTrab?'':'disabled class="locked"'}
+                <label style="font-size:13px;font-weight:700;color:${isTrab||isOcioso?'var(--primary)':'var(--muted)'};white-space:nowrap">Estado Atuação${isTrab||isOcioso?' *':''}</label>
+                <select style="max-width:160px;font-size:14px;padding:10px 14px;border-color:${(isTrab||isOcioso)&&!ts.regiao?'var(--rose-border)':'var(--border2)'}"
+                  ${isTrab||isOcioso?'':'disabled class="locked"'}
                   onchange="setField(${di},${ti},'regiao',this.value)">${regiaoOpts}</select>
               </div>
             </div>
@@ -1168,8 +1172,9 @@ function renderDateBlocks(){
 function setSit(di,ti,sit){
   const ts=dates[di].teamStatus[ti]||defaultStatus();
   ts.situacao=sit; ts.detalhes=DET[sit][0]; ts.retorno='';
-  // keep obs but clear projeto/sigla/regiao if switching away from TRABALHANDO
-  if(sit!=='TRABALHANDO'){ ts.projeto=''; ts.sigla=''; ts.regiao=''; }
+  // keep obs but clear projeto/sigla if switching away from TRABALHANDO; keep regiao for OCIOSO too
+  if(sit!=='TRABALHANDO'){ ts.projeto=''; ts.sigla=''; }
+  if(sit!=='TRABALHANDO'&&sit!=='OCIOSO'){ ts.regiao=''; }
   dates[di].teamStatus[ti]=ts;
   renderDateBlocks();
 }
